@@ -26,7 +26,7 @@ def suggester(word, data, exactly):
 
 
 def print_results(results, number):
-    print("Counts\t Title")
+    print("Counts\t\tTitle")
     for n, l in enumerate(results):
         if n >= number:
             break

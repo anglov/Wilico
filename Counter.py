@@ -2,6 +2,7 @@ import io
 import bz2
 import re
 from xml.dom.pulldom import parse, START_ELEMENT
+import xml.etree.ElementTree as ET
 from collections import defaultdict
 import csv
 
@@ -26,21 +27,24 @@ def text_from_node(node):
         if ch.nodeType == node.TEXT_NODE:
             yield ch.data
 
+
 def links_counter (IN):
-    links_count = defaultdict(lambda : 0)
-    open_func = open
+    links_count = defaultdict(lambda: 0)
     if IN.endswith("bz2"):
         open_func = bz2.open
+    else:
+        open_func = open
     with open_func(IN) as f:
-        doc = parse(f)
-        for event, node in doc:
-            if event == START_ELEMENT and node.tagName == 'page':
-                doc.expandNode(node)
-                text = node.getElementsByTagName('text')[0]
-                links = get_links(text_from_node(text))
-                for m in links:
-                    links_count[m]+=1
-
+        context = ET.iterparse(f, events=("start", "end"))
+        context = iter(context)
+        event, root = context.__next__()
+        for event, elem in context:
+            if event == "end" and elem.tag == "text":
+                if elem.text:
+                    links = get_links(elem.text)
+                    for m in links:
+                        links_count[m] += 1
+                root.clear()
     return links_count
 
 def save_to_file(out_file, contents):
@@ -53,8 +57,7 @@ def save_to_file(out_file, contents):
             w.writerow([item[0],item[1]])
 
 
-
 if __name__ == '__main__':
-    test = links_counter("C:/zaj3/enwiki-20140903-pages-articles_part_2.xml.bz2")
+    test = links_counter("../Dane/zaj3/enwiki-20140903-pages-articles_part_2.xml.bz2")
     # print (test)
-    save_to_file ("C:/wilico/count.csv",test)
+    save_to_file ("count.csv",test)
