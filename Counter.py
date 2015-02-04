@@ -4,7 +4,7 @@ import re
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 import csv
-
+import argparse
 
 def get_links(page_contents):
     page = io.StringIO()
@@ -47,6 +47,11 @@ def save_to_file(out_file, contents):
 
 
 if __name__ == '__main__':
-    test = links_counter("../Dane/zaj3/enwiki-20140903-pages-articles_part_2.xml.bz2")
-    # print (test)
-    save_to_file ("count.csv",test)
+    parser = argparse.ArgumentParser(description='Counting links from wikipedia')
+    parser.add_argument('Input', metavar='Input', type=str, nargs='?',
+                        help='file with  in format xml packed in .bz2')
+    parser.add_argument('--out', default='count.csv', type=str,
+                        help='directory od the output (default /count.csv)')
+    args = parser.parse_args()
+    result = links_counter(args.Input)
+    save_to_file (args.out ,result)
