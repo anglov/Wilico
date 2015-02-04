@@ -1,12 +1,9 @@
 import io
 import bz2
 import re
-from xml.dom.pulldom import parse, START_ELEMENT
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 import csv
-
-link_re = re.compile("\[\[([^\[\]\|]+)(?:\|[^\]]+)?\]\]")
 
 
 def get_links(page_contents):
@@ -14,18 +11,9 @@ def get_links(page_contents):
     for c in page_contents:
         page.write(c)
     page = page.getvalue()
-    pa = re.findall("\[\[([^\[\]\|]+)(?:\|[^\]]+)?\]\]", page, flags=re.UNICODE)
+    pa = re.findall("\[\[([^\[\]\|\#]+)(?:[|#][^\]]+)?\]\]", page, flags=re.UNICODE)
     # print(pa)
     return pa
-
-
-def text_from_node(node):
-    """
-    Przyjmuje węzeł XML i zwraca kawałki zawartego w nim tekstu
-    """
-    for ch in node.childNodes:
-        if ch.nodeType == node.TEXT_NODE:
-            yield ch.data
 
 
 def links_counter (IN):
@@ -43,9 +31,10 @@ def links_counter (IN):
                 if elem.text:
                     links = get_links(elem.text)
                     for m in links:
-                        links_count[m] += 1
+                        links_count[m.strip()] += 1
                 root.clear()
     return links_count
+
 
 def save_to_file(out_file, contents):
     out = []
