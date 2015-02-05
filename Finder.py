@@ -1,44 +1,46 @@
 # -*- coding: utf-8 -*-
+from collections import defaultdict
 import csv
 import argparse
 
 
-def load_data(path):
-    data = []
-    with open(path, encoding="utf-8") as file:
-        r = csv.reader(file,
-            dialect=csv.unix_dialect)
-        for row in r:
-            data.append([row[0], int(row[1])])
-    return data
+class Finder():
+    def __load_data(self, path):
+        data = []
+        with open(path, encoding="utf-8") as file:
+            r = csv.reader(file, dialect=csv.unix_dialect)
+            data = list(tuple(row) for row in r)
+        return data
 
-
-def suggester(word, data, exactly):
-    result = []
-    for item in data:
-        if exactly:
-            if item[0] == word:
-                result.append(item)
+    def suggest(self, word):
+        if self.exactly:
+            result = [x for x in self.data if x[0] == word]
         else:
-            if item[0].find(word) > -1:
-                result.append(item)
-    return sorted(result, reverse=True, key=lambda y: y[1])
+            result = [x for x in self.data if x[0].find(word) > -1]
+        return sorted(result, reverse=True, key=lambda y: int(y[1]))
 
+    def print(self, words):
+        for word in words:
+            print('Results for ' + word)
+            results = self.suggest(word)
+            print("Counts\t\tTitle")
+            if not results:
+                print(str(0) + '\t\t' + word)
+            for res in results[:self.number]:
+                print(str(res[1]) + '\t\t' + res[0])
+            print('End of results\n')
 
-def print_results(results, number):
-    print("Counts\t\tTitle")
-    for n, l in enumerate(results):
-        if n >= number:
-            break
-        print(str(l[1])+'\t\t'+l[0])
-
+    def __init__(self, file, number, exactly):
+        self.number = number
+        self.exactly = exactly
+        self.data = self.__load_data(file)
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Finding word in base of titles of wikipedia and show links to this site')
     parser.add_argument('Words', metavar='Words', type=str, nargs='+',
                         help='Words to find in base')
-    parser.add_argument('--base', default='count.csv', type=str,
+    parser.add_argument('--file', default='count.csv', type=str,
                         help='directory od the base (default /count.csv)')
     parser.add_argument('--no', type=int, default=10,
                         help='numer of showed links in output ( default 10 )')
@@ -46,7 +48,5 @@ if __name__ == '__main__':
                         const=True, default=False,
                         help='exactly phase (default is finding all titles containing that phase)')
     args = parser.parse_args()
-    base = load_data(args.base)
-    for w in args.Words:
-        print('Results for '+w)
-        print_results(suggester(w, base, args.exa), args.no)
+    finder = Finder(args.file, args.no, args.exa)
+    finder.print(args.Words)
