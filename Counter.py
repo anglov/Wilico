@@ -17,7 +17,6 @@ class Counter():
             if item == Empty:
                 with self.parsers_done_lock:
                     self.parsers_done.value += 1
-                    print(self.parsers_done.value)
                     if self.parsers_done.value >= self.parsers:
                         q_in.put(Empty)
                         q_out.put(Empty)
